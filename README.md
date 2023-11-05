@@ -1,4 +1,3 @@
-```
 # Connect Unisat React dApp Boilerplate
 
 ## Overview
@@ -52,4 +51,3 @@ We encourage community contributions to this project. Feel free to fork the repo
 
 For detailed API documentation and more information on Unisat Wallet's features, please visit the [Unisat Wallet API documentation](https://docs.unisat.io/dev/unisat-wallet-api).
 
-```
