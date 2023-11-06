@@ -1,19 +1,19 @@
-# Connect Unisat React dApp Boilerplate
+# Boilerplate for DApps on BRC20
 
 ## Overview
 
-This boilerplate provides a foundational setup for developers looking to build decentralized applications (dApps) on the BRC20 token standard utilizing the Unisat Wallet. It's crafted with React and integrates essential functionalities to connect with the Unisat Wallet API, allowing for seamless interaction with BRC20 tokens.
+This boilerplate is a starting point for developers building decentralized applications (DApps) on the BRC20 token standard. It is configured with React and Ant Design, and it integrates with the Unisat Wallet API, simplifying the process of creating DApps capable of handling BRC20 tokens.
 
 ## Features
 
-- Pre-configured React environment for rapid dApp development on BRC20 tokens.
-- Integrated connection with the Unisat Wallet API for fetching and displaying wallet inscriptions.
-- Simplified state management for balances and transactions of BRC20 tokens.
-- User-friendly interface components using Ant Design for displaying token information.
+- React setup optimized for DApps on the BRC20 standard.
+- Unisat Wallet API integration for wallet management and token operations.
+- State management for BRC20 token balances and transaction history.
+- User interface components from Ant Design for an engaging user experience.
 
 ## Installation
 
-Clone the repository to your local machine and install the required dependencies:
+Begin by cloning the repository and installing the necessary dependencies:
 
 ```bash
 git clone https://github.com/Larkhell/connect-unisat-react-dapp.git
@@ -23,31 +23,34 @@ npm install
 
 ## Usage
 
-Run the application in development mode with:
+To run the DApp in development mode:
 
 ```bash
 npm start
 ```
 
-This command starts the development server and opens the dApp in your default web browser.
+This will start the development server and open the DApp in your default web browser.
 
-## Structure
+## Project Structure
 
-The boilerplate includes the following key components:
+The boilerplate includes several key components:
 
-- `App`: The main component that orchestrates the connection to the Unisat Wallet and data presentation.
-- `fetchContentData`: A helper function for making HTTP requests to retrieve content data.
-- `TickerBalance` and `Inscription`: Interfaces that define the data structure for the wallet's tickers and inscriptions.
+- `App`: Main component that manages connections to the Unisat Wallet and the presentation of data.
+- `Connect`: Handles the logic for wallet connections and displays user account details.
+- `LoadInscriptions`: Fetches and processes wallet inscriptions from the Unisat Wallet.
 
-## Building Your dApp
+## Customization
 
-To start building your dApp, modify the existing components and add new ones as per your project's requirements. This boilerplate is designed to be flexible and easily extendable to accommodate various dApp functionalities.
+This boilerplate serves as a foundation. Customize and expand it by adding new components and features to suit the needs of your DApp.
 
 ## Contributing
 
-We encourage community contributions to this project. Feel free to fork the repository, make your improvements, and submit a pull request.
+We welcome contributions to this project. If you have suggestions or find bugs, please fork the repository, make your changes, and submit a pull request.
 
 ## Documentation
 
-For detailed API documentation and more information on Unisat Wallet's features, please visit the [Unisat Wallet API documentation](https://docs.unisat.io/dev/unisat-wallet-api).
+For detailed API documentation and more on the Unisat Wallet and BRC20 tokens, visit the [Unisat Wallet API documentation](https://docs.unisat.io/dev/unisat-wallet-api).
 
+## Acknowledgements
+
+Powered by Fairlight 2023, this project provides essential tools and support for the development of blockchain applications.
