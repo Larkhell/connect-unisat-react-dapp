@@ -5,78 +5,90 @@ import { ConnectionContext } from './ConnectionContext';
 
 interface Inscription {
   inscriptionId: string;
+  address: string;
   content: string;
-  jsonData?: any;
 }
 
 interface TickerBalance {
   tick: string;
-  balance: number;
-  inscriptions: Inscription[];
+  availableBalance: number;
+  transferableBalance: number;
 }
 
 const pageSize = 100;
 
 async function fetchContentData(contentUrl: string): Promise<any> {
-  const response = await axios.get(contentUrl);
-  return response.data;
+  try {
+    const response = await axios.get(contentUrl);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching content data:', error);
+    return null;
+  }
 }
 
-async function processInscriptions(inscriptions: Inscription[]): Promise<TickerBalance[]> {
-  const balances: { [tick: string]: { balance: number; inscriptions: Inscription[] } } = {};
-  for (const inscription of inscriptions) {
-    const data = await fetchContentData(inscription.content);
-    if (data && (data.op === 'transfer' || data.op === 'mint')) {
-      const tick = data.tick.toLowerCase();
-      const amt = parseFloat(data.amt);
-      balances[tick] = balances[tick] || { balance: 0, inscriptions: [] };
-      balances[tick].balance += amt;
-      balances[tick].inscriptions.push({ ...inscription, jsonData: data });
-    }
+async function fetchBalanceData(address: string, ticker: string, token: string): Promise<TickerBalance> {
+  try {
+    const url = `https://open-api.unisat.io/v1/indexer/address/${address}/brc20/${ticker}/info`;
+    const response = await axios.get(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = response.data.data;
+    return {
+      tick: ticker,
+      availableBalance: data.availableBalance,
+      transferableBalance: data.transferableBalance
+    };
+  } catch (error) {
+    console.error('Error fetching balance data:', error);
+    return { tick: ticker, availableBalance: 0, transferableBalance: 0 };
   }
-  return Object.keys(balances).map(tick => ({ tick, ...balances[tick] }));
 }
+
 
 const LoadInscriptions: React.FC = () => {
-  const { isConnected, network } = useContext(ConnectionContext);
+  const { isConnected, currentAccount, network } = useContext(ConnectionContext);
   const [tickerBalances, setTickerBalances] = useState<TickerBalance[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [totalInscriptions, setTotalInscriptions] = useState<number>(0);
 
   const loadInscriptions = useCallback(async () => {
-    if (!isConnected) {
+    if (!isConnected || !currentAccount) {
       message.info('Please connect to load inscriptions.');
       return;
     }
+
     setLoading(true);
     try {
+      const token = 'your_api_token'; 
       const initialResponse = await window.unisat.getInscriptions(0, pageSize);
-      setTotalInscriptions(initialResponse.total);
-      if (initialResponse.total === 0) {
-        setLoading(false);
-        return;
+      const uniqueTickers = new Set<string>();
+
+      for (const inscription of initialResponse.list) {
+        const contentData = await fetchContentData(inscription.content);
+        if (contentData && contentData.tick) {
+          uniqueTickers.add(contentData.tick.toLowerCase());
+        }
       }
-      const pages = Math.ceil(initialResponse.total / pageSize);
-      const inscriptionsPromises = Array.from({ length: pages }, (_, pageIndex) =>
-        window.unisat.getInscriptions(pageIndex * pageSize, pageSize)
+
+      const balances = await Promise.all(
+        Array.from(uniqueTickers).map(ticker => fetchBalanceData(currentAccount, ticker, token))
       );
-      const inscriptionsResponses = await Promise.all(inscriptionsPromises);
-      const allInscriptions = inscriptionsResponses.flatMap(res => res.list);
-      const processedBalances = await processInscriptions(allInscriptions);
-      setTickerBalances(processedBalances);
+
+      setTickerBalances(balances);
     } catch (error) {
       console.error('Failed to load inscriptions:', error);
       message.error('Failed to load inscriptions');
-      setTickerBalances([]);
-      setTotalInscriptions(0);
     } finally {
       setLoading(false);
     }
-  }, [isConnected, network]);
+  }, [isConnected, currentAccount, network]);
 
   useEffect(() => {
     loadInscriptions();
-  }, [loadInscriptions, network]);
+  }, [loadInscriptions]);
 
   const balanceColumns = [
     {
@@ -85,41 +97,30 @@ const LoadInscriptions: React.FC = () => {
       key: 'tick',
     },
     {
-      title: 'Balance',
-      dataIndex: 'balance',
-      key: 'balance',
+      title: 'Available Balance',
+      dataIndex: 'availableBalance',
+      key: 'availableBalance',
       render: (balance: number) => balance.toLocaleString(),
     },
     {
-      title: 'Inscriptions',
-      key: 'inscriptions',
-      render: (_: any, record: TickerBalance) => (
-        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-          {record.inscriptions.map((inscription) => (
-            <div key={inscription.inscriptionId}>
-              {JSON.stringify(inscription.jsonData, null, 2)}
-            </div>
-          ))}
-        </div>
-      ),
+      title: 'Transferable Balance',
+      dataIndex: 'transferableBalance',
+      key: 'transferableBalance',
+      render: (balance: number) => balance.toLocaleString(),
     },
   ];
 
   return (
     <>
-      {isConnected && totalInscriptions > 0 && (
-        <>
-          <h2>Total inscriptions: {totalInscriptions}</h2>
-          <Table
-            dataSource={tickerBalances}
-            columns={balanceColumns}
-            loading={loading}
-            pagination={false}
-            rowKey="tick"
-          />
-        </>
+      {isConnected && (
+        <Table
+          dataSource={tickerBalances}
+          columns={balanceColumns}
+          loading={loading}
+          pagination={false}
+          rowKey="tick"
+        />
       )}
-      {isConnected && totalInscriptions === 0 && !loading && <p>No inscriptions found.</p>}
       {!isConnected && <p>Please connect to view inscriptions.</p>}
     </>
   );
